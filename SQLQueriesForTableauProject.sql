@@ -22,24 +22,48 @@ select location, date, total_cases, new_cases, total_deaths, population
 from PorftolioProject..CovidDeaths
 order by 1,2
 
+
+--1 Visualization
 -- looking at total cases vs total deaths
 -- P(dying | covid)
-select location, date, total_cases, total_deaths, (total_deaths/total_cases)*100 as DeathPercentage
-from PorftolioProject..CovidDeaths
-where location like'%states%'
+
+Select SUM(new_cases) as total_cases, SUM(cast(new_deaths as int)) as total_deaths, SUM(cast(new_deaths as int))/SUM(New_Cases)*100 as DeathPercentage
+From PorftolioProject..CovidDeaths
+--Where location like '%states%'
+where continent is not null 
+--Group By date
 order by 1,2
 
--- what percentage of population has/had covid
-select location, date, total_cases, population, (total_cases/population)*100 as CovidPercentage
-from PorftolioProject..CovidDeaths
-where location = 'Germany'
-order by 1,2
 
+--2 Visualization
+-- Eliminating redundancies
+
+Select location, SUM(cast(new_deaths as int)) as TotalDeathCount
+From PorftolioProject..CovidDeaths
+--Where location like '%states%'
+Where continent is null 
+and location not in ('World', 'European Union', 'International')
+Group by location
+order by TotalDeathCount desc
+
+
+--3 Visualization
 -- countries with highest infection rate compared to population
-select location, population, max(total_cases) as TotalCases, max(total_cases/population*100) as InfectionRatePercentage
-from PorftolioProject..CovidDeaths
-group by location, population
-order by InfectionRatePercentage desc
+
+Select Location, Population, MAX(total_cases) as HighestInfectionCount,  Max((total_cases/population))*100 as PercentPopulationInfected
+From PorftolioProject..CovidDeaths
+--Where location like '%states%'
+Group by Location, Population
+order by PercentPopulationInfected desc
+
+
+--4 Visualization
+Select Location, Population,date, MAX(total_cases) as HighestInfectionCount,  Max((total_cases/population))*100 as PercentPopulationInfected
+From PorftolioProject..CovidDeaths
+--Where location like '%states%'
+Group by Location, Population, date
+order by PercentPopulationInfected desc
+
 
 -- countries with highest death count per capita
 select location, population, max(cast(total_deaths as float)) as TotalDeathCount, max(total_deaths/population*100) as DeathPerCapitaPercentage
